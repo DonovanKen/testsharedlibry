@@ -1,8 +1,8 @@
-def call(String IMAGE_NAME, String IMAGE_TAG, String CONTAINER_NAME) {
+def call(String FRONTEND, String IMAGE_TAG, String CONTAINER_NAME) {
     sh '''
                    echo "delete old container and create new..."
                    docker rm -f ${CONTAINER_NAME}
-                   docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${IMAGE_TAG}
+                   docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${FRONTEND}:${IMAGE_TAG}
                    docker ps
                    sleep 5
 
