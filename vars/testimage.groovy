@@ -1,5 +1,5 @@
-def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINER_FRONTEND, String CONTAINER_ORDERSERVICE) {
-    // Use double quotes and add error handling
+def call(String FRONTEND, String ORDERSERVICE, String PRODUCTSERVICE, String IMAGE_TAG, String CONTAINER_FRONTEND, String CONTAINER_ORDERSERVICE, String CONTAINER_PRODUCTSERVICE) {
+    // Test frontend
     sh """
         echo "Testing frontend container..."
         docker rm -f ${CONTAINER_FRONTEND} || true
@@ -13,6 +13,7 @@ def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINE
         echo "Frontend test completed..."
     """
 
+    // Test orderservice
     sh """
         echo "Testing orderservice container..."
         docker rm -f ${CONTAINER_ORDERSERVICE} || true
@@ -26,9 +27,10 @@ def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINE
         echo "Orderservice test completed..."
     """
 
-     sh """
+    // Test productservice
+    sh """
         echo "Testing productservice container..."
-        docker rm -f ${CONTAINER_ORDERSERVICE} || true
+        docker rm -f ${CONTAINER_PRODUCTSERVICE} || true
         docker run -d -p 5002:5002 --name ${CONTAINER_PRODUCTSERVICE} ${PRODUCTSERVICE}:${IMAGE_TAG}
         docker ps
         sleep 5
@@ -36,6 +38,6 @@ def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINE
         curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_PRODUCTSERVICE}):5002 || true
         echo "Cleaning up productservice container..."
         docker rm -f ${CONTAINER_PRODUCTSERVICE}
-        echo "productservice test completed..."
+        echo "Productservice test completed..."
     """
 }
