@@ -1,33 +1,34 @@
 def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINER_FRONTEND, String CONTAINER_ORDERSERVICE) {
-    // Test frontend
-    sh """
-        echo "Testing frontend container..."
-        docker rm -f ${CONTAINER_FRONTEND} || true
-        docker run -d -p 5000:5000 --name ${CONTAINER_FRONTEND} ${FRONTEND}:${IMAGE_TAG}
-        docker ps
-        sleep 5
+    sh '''
+                   echo "delete old container and create new..."
+                   docker rm -f ${CONTAINER_FRONTEND}
+                   docker run -d -p 5000:5000 --name ${CONTAINER_FRONTEND} ${FRONTEND}:${IMAGE_TAG}
+                   docker ps
+                   sleep 5
 
-        echo "Testing frontend container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_FRONTEND}):5000
+                   echo "testing container..."
+                   curl -I http://$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_FRONTEND}):5000
 
-        echo "Cleaning up frontend container..."
-        docker rm -f ${CONTAINER_FRONTEND}
-        echo "Frontend test completed..."
-    """
+                   echo "delete tested container..."
+                   docker rm -f ${CONTAINER_FRONTEND}
 
-    // Test orderservice  
-    sh """
-        echo "Testing orderservice container..."
-        docker rm -f ${CONTAINER_ORDERSERVICE} || true
-        docker run -d -p 5003:5003 --name ${CONTAINER_ORDERSERVICE} ${ORDERSERVICE}:${IMAGE_TAG}
-        docker ps
-        sleep 5
+                    echo "End..."
+                '''
 
-        echo "Testing orderservice container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_ORDERSERVICE}):5003
 
-        echo "Cleaning up orderservice container..."
-        docker rm -f ${CONTAINER_ORDERSERVICE}
-        echo "Orderservice test completed..."
-    """
+    sh '''
+                   echo "delete old container and create new..."
+                   docker rm -f ${CONTAINER_ORDERSERVICE}
+                   docker run -d -p 5003:5003 --name ${CONTAINER_ORDERSERVICE} ${ORDERSERVICE}:${IMAGE_TAG}
+                   docker ps
+                   sleep 5
+
+                   echo "testing container..."
+                   curl -I http://$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_ORDERSERVICE}):5003
+
+                   echo "delete tested container..."
+                   docker rm -f ${CONTAINER_ORDERSERVICE}
+
+                    echo "End..."
+                '''
 }
