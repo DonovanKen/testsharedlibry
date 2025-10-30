@@ -25,4 +25,17 @@ def call(String FRONTEND, String ORDERSERVICE, String IMAGE_TAG, String CONTAINE
         docker rm -f ${CONTAINER_ORDERSERVICE}
         echo "Orderservice test completed..."
     """
+
+     sh """
+        echo "Testing productservice container..."
+        docker rm -f ${CONTAINER_ORDERSERVICE} || true
+        docker run -d -p 5002:5002 --name ${CONTAINER_PRODUCTSERVICE} ${PRODUCTSERVICE}:${IMAGE_TAG}
+        docker ps
+        sleep 5
+        echo "Testing productservice container..."
+        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_PRODUCTSERVICE}):5002 || true
+        echo "Cleaning up productservice container..."
+        docker rm -f ${CONTAINER_PRODUCTSERVICE}
+        echo "productservice test completed..."
+    """
 }
