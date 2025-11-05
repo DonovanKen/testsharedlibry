@@ -1,57 +1,39 @@
-def call(String FRONTEND, String ORDERSERVICE, String PRODUCTSERVICE, String USERSERVICE, String IMAGE_TAG, String CONTAINER_FRONTEND, String CONTAINER_ORDERSERVICE, String CONTAINER_PRODUCTSERVICE, String CONTAINER_USERSERVICE) {
-    // Test frontend
-    sh """
-        echo "Testing frontend container..."
-        docker rm -f ${CONTAINER_FRONTEND} || true
-        docker run -d -p 5000:5000 --name ${CONTAINER_FRONTEND} ${FRONTEND}:${IMAGE_TAG}
-        docker ps
-        sleep 5
-        echo "Testing frontend container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_FRONTEND}):5000 || true
-        echo "Cleaning up frontend container..."
-        docker rm -f ${CONTAINER_FRONTEND}
-        echo "Frontend test completed..."
-    """
-
-    // Test orderservice
-    sh """
-        echo "Testing orderservice container..."
-        docker rm -f ${CONTAINER_ORDERSERVICE} || true
-        docker run -d -p 5003:5003 --name ${CONTAINER_ORDERSERVICE} ${ORDERSERVICE}:${IMAGE_TAG}
-        docker ps
-        sleep 5
-        echo "Testing orderservice container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_ORDERSERVICE}):5003 || true
-        echo "Cleaning up orderservice container..."
-        docker rm -f ${CONTAINER_ORDERSERVICE}
-        echo "Orderservice test completed..."
-    """
-
-    // Test productservice
-    sh """
-        echo "Testing productservice container..."
-        docker rm -f ${CONTAINER_PRODUCTSERVICE} || true
-        docker run -d -p 5002:5002 --name ${CONTAINER_PRODUCTSERVICE} ${PRODUCTSERVICE}:${IMAGE_TAG}
-        docker ps
-        sleep 5
-        echo "Testing productservice container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_PRODUCTSERVICE}):5002 || true
-        echo "Cleaning up productservice container..."
-        docker rm -f ${CONTAINER_PRODUCTSERVICE}
-        echo "Productservice test completed..."
-    """
-
-    // Test userservice
-    sh """
-        echo "Testing userservice container..."
-        docker rm -f ${CONTAINER_USERSERVICE} || true
-        docker run -d -p 5001:5001 --name ${CONTAINER_USERSERVICE} ${USERSERVICE}:${IMAGE_TAG}
-        docker ps
-        sleep 5
-        echo "Testing userservice container..."
-        curl -I http://\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_USERSERVICE}):5001 || true
-        echo "Cleaning up userservice container..."
-        docker rm -f ${CONTAINER_USERSERVICE}
-        echo "userservice test completed..."
-    """
+def call(Map params) {
+    def imageName = params.imageName
+    def imageTag = params.imageTag
+    def containerName = params.containerName
+    def port = params.port ?: "5000"
+    
+    echo "Testing container: ${imageName}:${imageTag}"
+    
+    try {
+        sh """
+            # Clean up any existing container
+            docker rm -f ${containerName} || true
+            
+            # Run container
+            docker run -d --name ${containerName} -p ${port}:${port} ${imageName}:${imageTag}
+            
+            # Wait for container to start
+            sleep 10
+            
+            # Check container status
+            echo "=== Container Status ==="
+            docker ps | grep ${containerName} || exit 1
+            
+            # Test endpoint
+            echo "=== Testing Endpoint ==="
+            curl -f http://localhost:${port} || curl -I http://localhost:${port} || echo "Endpoint check completed"
+            
+            # Check logs
+            echo "=== Container Logs ==="
+            docker logs ${containerName}
+        """
+    } catch (Exception e) {
+        echo "Container test failed: ${e.getMessage()}"
+        throw e
+    } finally {
+        // Always clean up
+        sh "docker rm -f ${containerName} || true"
+    }
 }
